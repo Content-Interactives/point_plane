@@ -21,6 +21,7 @@ const PointPlane = () => {
     const [isCorrect, setIsCorrect] = useState(false);
     const [incorrectPulse, setIncorrectPulse] = useState(false);
     const pulseTimeoutRef = useRef(null);
+    const [isNarrow, setIsNarrow] = useState(false);
 
     // Functions
     const handleClick = () => {
@@ -63,6 +64,13 @@ const PointPlane = () => {
         setFlyTransform(`translate(${restX}px, ${restY}px) scale(1)`);
         setPositionReady(true);
         // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => setIsNarrow(window.innerWidth < 407);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     const startFlyAnimationTo = (vx, vy) => {
@@ -160,7 +168,7 @@ const PointPlane = () => {
                         style={{
                             position: 'absolute',
                             left: -70,
-                            bottom: '80%',
+                            bottom: isNarrow ? '85%' : '80%',
                             width: '48px',
                             transform: flyTransform + ' translate(-50%, -100%)',
                             transition: transitionEnabled ? 'transform 700ms ease-out' : 'none',
