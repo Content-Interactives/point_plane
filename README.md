@@ -1,42 +1,73 @@
-# Point on a Plane Interactive
+# Point on a Plane
 
-This repository contains the code for the **Point on a Plane Interactive**, designed to introduce elementary students to the concept of **coordinates** by placing points on a plane. Students learn how to identify and describe positions using ordered pairs in a fun, visual way.
+React activity for **first-quadrant** coordinate plotting: a fixed grid (default 1–5 on both axes) shows unit intersections; learners click the lattice point that matches the displayed ordered pair. Success triggers `canvas-confetti` and a short mascot translation animation before the next random target.
 
----
-
-## 🔗 Live Interactive
-
-Try it out here:  
-👉 https://content-interactives.github.io/point_plane/
+**Production:** [https://content-interactives.github.io/point_plane/](https://content-interactives.github.io/point_plane/)
 
 ---
 
-## 🌐 Where This Interactive Is Being Used
+## Stack
 
-This interactive is currently featured in the following locations:
+| Layer | Packages / tooling |
+|--------|---------------------|
+| UI | React 19 (`react`, `react-dom`) |
+| Build | Vite 7, `@vitejs/plugin-react` |
+| Styling | Tailwind CSS 3, PostCSS, Autoprefixer |
+| Feedback | `canvas-confetti` |
+| Lint | ESLint 9 (flat config), React Hooks / Refresh plugins |
+| Deploy | `gh-pages` → `dist` |
 
-- <img width="20" height="20" alt="image" src="https://github.com/user-attachments/assets/5d12571f-8e12-4441-98ab-c0bc94069a96" /> **CK-12 Intent Response**
-  - 👉 PRODUCTION: [PENDING]
-  - 👉 MASTER: [PENDING]
-- 📘 **CK-12 Flexbooks**
-  - 👉 [PENDING: Book/lesson link where this interactive appears]
-
----
-
-## 📚 Standards & Subjects
-
-This interactive aligns with the following topics and standards:
-
-- **📂 Subject Area**: Elementary Math (Geometry)
-- **🔷 Topic**: Coordinate plane basics — identifying and plotting points using ordered pairs
-- **📏 Common Core**:
-  - **CCSS.MATH.CONTENT.5.G.A.1** – Use a pair of perpendicular number lines, called axes, to define a coordinate system, with the intersection of the lines (the origin) arranged to coincide with the 0 on each line. Understand that the x-coordinate and y-coordinate define the location of each point in the plane.
-  - **CCSS.MATH.CONTENT.5.G.A.2** – Represent real world and mathematical problems by graphing points in the first quadrant of the coordinate plane, and interpret coordinate values of points in the context of the situation.
+The codebase is **JavaScript** (`.jsx`), not TypeScript. `package.json` sets `"type": "module"`.
 
 ---
 
-## 🛠️ Developer Notes
+## Build and base path
 
-- **Built with**: React, TypeScript, Vite, Tailwind CSS  
-- **Deployed via**: GitHub Pages  
-- **See**: `src/`, `public/`, `package.json`, `vite.config.js`, `tailwind.config.js`, and related config files in the repository
+`vite.config.js` sets `base: '/point_plane/'` for GitHub Pages.
+
+| Script | Command |
+|--------|---------|
+| Development | `npm run dev` |
+| Production bundle | `npm run build` → `dist/` |
+| Preview `dist` | `npm run preview` |
+| Deploy | `npm run deploy` (`predeploy` → `vite build`, then `gh-pages -d dist`) |
+
+---
+
+## Repository layout
+
+| Path | Role |
+|------|------|
+| `index.html` | Shell; `#root` |
+| `src/main.jsx` | `createRoot`, `StrictMode`, `index.css` |
+| `src/App.jsx` | Renders `PointPlane` |
+| `src/components/PointPlane.jsx` | Mascot overlay, answer display, click outcome, timeouts, `xToSvg` / `yToSvg` aligned with plane (must match `CoordinatePlane` defaults) |
+| `src/components/CoordinatePlane.jsx` | SVG grid, axes, hit targets, hover arrow, `forwardRef` + `useImperativeHandle` for answer lifecycle |
+| `src/components/ui/reused-ui/Container.jsx` | Chrome (`PointPlane` sets `showSoundButton` without `onSound`; wire `onSound` if you add audio) |
+
+---
+
+## Application logic (summary)
+
+- **Grid model:** `CoordinatePlane` uses `size`, `margin`, and `max` (default 260 px, 32 px, 5). Inner drawable span is `size - 2 * margin`; `step = innerSize / max`. SVG origin-style math: x increases right (`originX + x * step`), y increases up (`originY - y * step`) for integer coordinates `x, y ∈ {1, …, max}`.
+- **Target:** `makeRandomPoint()` picks independent uniform integers in `[1, max]` for each axis. `answer` is pushed to parent via `onAnswerChange`; `useImperativeHandle` exposes `{ answer, randomizeAnswer }` for external control.
+- **Interaction:** Invisible circles (`r={8}`) on each lattice point handle hover (red arrow preview) and click → `onPointClick({ x, y })`. `disabled` clears hover and sets `pointer-events: none`.
+- **Parent flow:** `PointPlane` compares clicked pair to `answer`. Correct: multi-burst confetti, mascot image swap, `startFlyAnimationTo` uses the same mapping as the plane plus small offsets (`vx + 1.5`, `vy + 0.3` in grid units before `xToSvg`/`yToSvg`). After 3 s, transform resets without transition, `planeRef.current.randomizeAnswer()` loads the next point. Wrong: confused mascot ~2 s, pulse on the coordinate readout ~0.5 s.
+- **Responsive:** `window.innerWidth < 407` adjusts mascot `bottom` percentage.
+
+Duplicate geometry constants in `PointPlane.jsx` are annotated to stay in sync with `CoordinatePlane` props defaults.
+
+---
+
+## Product integration
+
+- **CK-12 Intent Response** — production / master: pending  
+- **CK-12 Flexbooks** — book/lesson link: pending  
+
+Upstream: [github.com/Content-Interactives/point_plane](https://github.com/Content-Interactives/point_plane).
+
+---
+
+## Educational alignment
+
+Subject, topic, and Common Core (5.G.A.1, 5.G.A.2) are summarized in [`Standards.md`](Standards.md).
